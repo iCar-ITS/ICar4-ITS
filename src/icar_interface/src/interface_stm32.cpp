@@ -18,6 +18,9 @@ void cllbck_sub_stm32frompc_accessory(const std_msgs::UInt8ConstPtr &msg);
 int interface_stm32_init();
 int interface_stm32_routine();
 
+
+
+
 //=====Parameter
 std::string stm32_ip;
 int stm32_port;
@@ -48,24 +51,25 @@ uint16_t socket_rx_len;
 uint8_t socket_tx_buffer[1024];
 uint8_t socket_rx_buffer[1024];
 
-//-----Data to PC
-//===============
-uint32_t epoch_to_pc;
-uint16_t remote[16];
-uint16_t encoder_kiri;
-uint16_t encoder_kanan;
-float gyroscope;
-int16_t throttle_position;
-int16_t steering_position;
-uint8_t mode;
 
-//-----Data from PC
-//=================
-uint32_t epoch_from_pc;
-int16_t throttle;
-int16_t steering;
-int8_t transmission;
-uint8_t accessory;
+// ===== Struct Data New UDP
+struct  {
+  uint32_t timestamp;
+  uint32_t status;
+  uint16_t remote_data[16];
+  uint32_t steer_pos;
+  uint16_t odom_enc_val[2];
+  float gyro_yaw_data;
+} data_to_pc;
+
+struct  {
+    uint32_t timestamp;
+    uint32_t transmission;
+    uint32_t gas_v;
+    uint32_t steer_sp;
+    uint32_t breake;
+    uint32_t io_status;
+} data_from_pc;
 
 int main(int argc, char **argv)
 {
@@ -121,18 +125,18 @@ void cllbck_tim_100hz(const ros::TimerEvent &event)
 
 void cllbck_sub_stm32frompc_throttle_steering(const std_msgs::Int16MultiArrayConstPtr &msg)
 {
-    throttle = msg->data[0];
-    steering = msg->data[1];
+    data_from_pc.gas_v = (int32_t) msg->data[0];
+    data_from_pc.steer_sp = (int32_t) msg->data[1];
 }
 
 void cllbck_sub_stm32frompc_transmission(const std_msgs::Int8ConstPtr &msg)
 {
-    transmission = msg->data;
+    data_from_pc.transmission = (int32_t) msg->data;
 }
 
 void cllbck_sub_stm32frompc_accessory(const std_msgs::UInt8ConstPtr &msg)
 {
-    accessory = msg->data;
+    data_from_pc.io_status = (int32_t) msg->data;
 }
 
 //------------------------------------------------------------------------------
@@ -162,49 +166,13 @@ int interface_stm32_init()
     return 0;
 }
 
-int interface_stm32_routine()
-{
-    // Communication Protocol (PC -> STM32)
-    // ====================================
-    // Offset   | Size  | Description
-    // 0        | 4     | epoch_from_pc
-    // 4        | 2     | throttle
-    // 6        | 2     | steering
-    // 8        | 1     | transmission
-    // 10       | 1     | accessory
-    memcpy(socket_tx_buffer + 0, &epoch_from_pc, 4);
-    memcpy(socket_tx_buffer + 4, &throttle, 2);
-    memcpy(socket_tx_buffer + 6, &steering, 2);
-    memcpy(socket_tx_buffer + 8, &transmission, 1);
-    memcpy(socket_tx_buffer + 10, &accessory, 1);
+int interface_stm32_routine(){
 
     /* Sending and receiving data from the STM32. */
-    int len_data_from_pc = sendto(socket_fd, socket_tx_buffer, 64, MSG_DONTWAIT, (struct sockaddr *)&socket_server_address, sizeof(socket_server_address));
-    int len_data_to_pc = recvfrom(socket_fd, socket_rx_buffer, 64, MSG_DONTWAIT, NULL, NULL);
+    int len_data_from_pc = sendto(socket_fd, (const char *)&data_from_pc, sizeof(data_from_pc), MSG_DONTWAIT, (struct sockaddr *)&socket_server_address, sizeof(socket_server_address));
+    int len_data_to_pc = recvfrom(socket_fd, (char *)&data_to_pc, sizeof(data_to_pc), MSG_DONTWAIT, NULL, NULL);
 
-    // Communication Protocol (STM32 -> PC)
-    // ====================================
-    // Offset   | Size  | Description
-    // 0        | 4     | epoch_to_pc
-    // 4        | 32    | remote
-    // 36       | 2     | encoder_kiri
-    // 38       | 2     | encoder_kanan
-    // 40       | 4     | gyroscope
-    // 44       | 2     | throttle_position
-    // 46       | 2     | steering_position
-    // 48       | 1     | mode
-    memcpy(&epoch_to_pc, socket_rx_buffer + 0, 4);
-    memcpy(&remote, socket_rx_buffer + 4, 32);
-    memcpy(&encoder_kiri, socket_rx_buffer + 36, 2);
-    memcpy(&encoder_kanan, socket_rx_buffer + 38, 2);
-    memcpy(&gyroscope, socket_rx_buffer + 40, 4);
-    memcpy(&throttle_position, socket_rx_buffer + 44, 2);
-    memcpy(&steering_position, socket_rx_buffer + 46, 2);
-    memcpy(&mode, socket_rx_buffer + 48, 1);
-
-    //==================================
-
-    epoch_from_pc++;
+    data_from_pc.timestamp++;
 
     //==================================
 
@@ -215,13 +183,13 @@ int interface_stm32_routine()
     if (last_epoch_to_pc == 0)
     {
         // _log.warn("last epoch is 0. Initializing the last epoch to: %d. (%s, %d)", epoch_to_pc, __FILE__, __LINE__);
-        last_epoch_to_pc = epoch_to_pc;
+        last_epoch_to_pc = data_to_pc.timestamp;
         return 0;
     }
 
     /* This is to check if the epoch is continuous.
     If the epoch is not continuous, it means that the STM32 is not receiving the data from the PC. */
-    if (epoch_to_pc != last_epoch_to_pc + 1)
+    if (data_to_pc.timestamp != last_epoch_to_pc + 1)
     {
         // _log.error("Epoch is not continuous. Expected: %d. Received: %d. (%s, %d)", last_epoch_to_pc + 1, epoch_to_pc, __FILE__, __LINE__);
         last_epoch_to_pc = 0;
@@ -232,36 +200,37 @@ int interface_stm32_routine()
     If the data is not received, it means that the STM32 is not sending the data to the PC. */
     if (len_data_to_pc < 0)
     {
-        // _log.error("Data from STM32 not received. Returned: %d. (%s, %d)", len_data_to_pc, __FILE__, __LINE__);
+        _log.error("Data from STM32 not received. Returned: %d. (%s, %d)", len_data_to_pc, __FILE__, __LINE__);
         return 0;
     }
 
-    last_epoch_to_pc = epoch_to_pc;
+    last_epoch_to_pc = data_to_pc.timestamp;
 
     //==================================
 
     std_msgs::UInt16MultiArray msg_stm32topc_remote;
     for (int i = 0; i < 16; i++)
-        msg_stm32topc_remote.data.push_back(remote[i]);
+        msg_stm32topc_remote.data.push_back(data_to_pc.remote_data[i]);
     pub_stm32topc_remote.publish(msg_stm32topc_remote);
 
     std_msgs::Int16MultiArray msg_stm32topc_encoder;
-    msg_stm32topc_encoder.data.push_back(encoder_kiri);
-    msg_stm32topc_encoder.data.push_back(encoder_kanan);
+    msg_stm32topc_encoder.data.push_back(data_to_pc.odom_enc_val[0]);
+    msg_stm32topc_encoder.data.push_back(data_to_pc.odom_enc_val[1]);
     pub_stm32topc_encoder.publish(msg_stm32topc_encoder);
 
     std_msgs::Float32 msg_stm32topc_gyroscope;
-    msg_stm32topc_gyroscope.data = gyroscope;
+    msg_stm32topc_gyroscope.data = data_to_pc.gyro_yaw_data;
     pub_stm32topc_gyroscope.publish(msg_stm32topc_gyroscope);
 
     std_msgs::Int16MultiArray msg_stm32topc_throttle_steering_position;
-    msg_stm32topc_throttle_steering_position.data.push_back(throttle_position);
-    msg_stm32topc_throttle_steering_position.data.push_back(steering_position);
-    pub_stm32topc_throttle_steering_position.publish(msg_stm32topc_throttle_steering_position);
+    msg_stm32topc_throttle_steering_position.data.push_back(0); // Tidak ada data ini dari stm
+    msg_stm32topc_throttle_steering_position.data.push_back((int16_t) data_to_pc.steer_pos);
+    pub_stm32topc_throttle_steering_position.publish(msg_stm32topc_throttle_steering_position); 
 
-    std_msgs::UInt8 msg_stm32topc_mode;
-    msg_stm32topc_mode.data = mode;
-    pub_stm32topc_mode.publish(msg_stm32topc_mode);
+    // Data ini tidak ada
+    // std_msgs::UInt8 msg_stm32topc_mode;
+    // msg_stm32topc_mode.data = mode;
+    // pub_stm32topc_mode.publish(msg_stm32topc_mode);
 
     return 0;
 }
