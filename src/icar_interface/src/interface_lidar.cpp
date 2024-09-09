@@ -91,8 +91,8 @@ int main(int argc, char **argv)
     tim_10hz = NH.createTimer(ros::Duration(0.10), cllbck_tim_10hz);
     tim_100hz = NH.createTimer(ros::Duration(0.01), cllbck_tim_100hz);
     //=====Subscriber
-    sub_lidar_front_points = NH.subscribe("/lidar/front/points", 1, cllbck_sub_lidar_front_points);
-    sub_lidar_rearright_points = NH.subscribe("/lidar/rearright/points", 1, cllbck_sub_lidar_rearright_points);
+    sub_lidar_front_points = NH.subscribe("/velodyne1/velodyne_points", 1, cllbck_sub_lidar_front_points);
+    sub_lidar_rearright_points = NH.subscribe("/velodyne2/velodyne_points", 1, cllbck_sub_lidar_rearright_points);
     //=====Publisher
     pub_lidar_base_points = NH.advertise<sensor_msgs::PointCloud2>("/lidar/base/points", 1);
     pub_lidar_base_floor_points = NH.advertise<sensor_msgs::PointCloud2>("/lidar/base/floor_points", 1);

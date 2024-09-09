@@ -19,7 +19,7 @@ Sebelum menjalankan program, pastikan semua dependensi telah terpenuhi. Beberapa
 4. numpy
 
 ```bash
-    pip3 install autopep8 ipykernel pygame numpy
+pip3 install autopep8 ipykernel pygame numpy
 ```
 
 ### D. Diinstall menggunakan `rosdep`:

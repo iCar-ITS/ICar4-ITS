@@ -2,42 +2,64 @@
     <include file="$(find icar_routine)/launch/common.launch" />
 
     <!--  -->
+    <!-- Velodyne 1 Configuration (Replaces Lidar Leshen C16) -->
+    <group ns="velodyne1">
+        <arg name="calibration" default="$(find velodyne_pointcloud)/params/VLP16db.yaml"/>
+        <arg name="device_ip" default="192.168.20.13" />
+        <arg name="frame_id" default="lidar_front_link" />
+        <arg name="manager" default="velodyne1_nodelet_manager" />
+        <arg name="max_range" default="30.0" />
+        <arg name="min_range" default="0.05" />
+        <arg name="port" default="2368" />
+        
+        <!-- Nodelet Manager and Driver for Velodyne 1 -->
+        <include file="$(find velodyne_driver)/launch/nodelet_manager.launch">
+            <arg name="device_ip" value="$(arg device_ip)"/>
+            <arg name="frame_id" value="$(arg frame_id)"/>
+            <arg name="manager" value="$(arg manager)" />
+            <arg name="model" value="VLP16"/>
+            <arg name="port" value="$(arg port)"/>
+        </include>
 
-    <node pkg="lslidar_c16_driver" type="lslidar_c16_driver_node" name="lslidar_c16_driver_node" output="log" respawn="true">
-        <param name="device_ip" value="192.168.50.3" />
-        <param name="msop_port" value="2368" />
-        <param name="difop_port" value="2369" />
-        <param name="frame_id" value="lidar_front_link" />
-    </node>
+        <!-- Transform Nodelet for Velodyne 1 -->
+        <include file="$(find velodyne_pointcloud)/launch/transform_nodelet.launch">
+            <arg name="model" value="VLP16"/>
+            <arg name="calibration" value="$(arg calibration)"/>
+            <arg name="manager" value="$(arg manager)" />
+            <arg name="max_range" value="$(arg max_range)"/>
+            <arg name="min_range" value="$(arg min_range)"/>
+        </include>
+    </group>
 
-    <node pkg="lslidar_c16_decoder" type="lslidar_c16_decoder_node" name="lslidar_c16_decoder_node" output="log" respawn="true">
-        <param name="min_range" value="0.05" />
-        <param name="max_range" value="30.0" />
-        <param name="frequency" value="10.0" />
-        <param name="publish_scan" value="true" />
-        <param name="scan_frame_id" value="lidar_front_link" />
-        <remap from="lslidar_pointcloud_c16" to="/lidar/front/points" />
-        <remap from="scan_topic" to="/lidar/front/scan" />
-    </node>
+    <!-- Velodyne 2 Configuration (Replaces Lidar Leshen N301) -->
+    <group ns="velodyne2">
+        <arg name="calibration" default="$(find velodyne_pointcloud)/params/VLP16db.yaml"/>
+        <arg name="device_ip" default="192.168.20.14" />
+        <arg name="frame_id" default="lidar_rearright_link" />
+        <arg name="manager" default="velodyne2_nodelet_manager" />
+        <arg name="max_range" default="30.0" />
+        <arg name="min_range" default="0.05" />
+        <arg name="port" default="4442" />
+        
+        <!-- Nodelet Manager and Driver for Velodyne 2 -->
+        <include file="$(find velodyne_driver)/launch/nodelet_manager.launch">
+            <arg name="device_ip" value="$(arg device_ip)"/>
+            <arg name="frame_id" value="$(arg frame_id)"/>
+            <arg name="manager" value="$(arg manager)" />
+            <arg name="model" value="VLP16"/>
+            <arg name="port" value="$(arg port)"/>
+        </include>
 
-    <!--  -->
+        <!-- Transform Nodelet for Velodyne 2 -->
+        <include file="$(find velodyne_pointcloud)/launch/transform_nodelet.launch">
+            <arg name="model" value="VLP16"/>
+            <arg name="calibration" value="$(arg calibration)"/>
+            <arg name="manager" value="$(arg manager)" />
+            <arg name="max_range" value="$(arg max_range)"/>
+            <arg name="min_range" value="$(arg min_range)"/>
+        </include>
+    </group>
 
-    <node pkg="lslidar_n301_driver" type="lslidar_n301_driver_node" name="lslidar_n301_driver_node" output="log" respawn="true">
-        <param name="device_ip" value="192.168.50.4" />
-        <param name="msop_port" value="2370" />
-        <param name="difop_port" value="2371" />
-        <param name="frame_id" value="lidar_rearright_link" />
-    </node>
-
-    <node pkg="lslidar_n301_decoder" type="lslidar_n301_decoder_node" name="lslidar_n301_decoder_node" output="log" respawn="true">
-        <param name="min_range" value="0.05" />
-        <param name="max_range" value="30.0" />
-        <param name="frequency" value="10.0" />
-        <param name="publish_point_cloud" value="true" />
-        <param name="child_frame_id" value="lidar_rearright_link" />
-        <remap from="lslidar_point_cloud" to="lidar/rearright/points" />
-        <remap from="scan" to="lidar/rearright/scan" />
-    </node>
 
     <!--  -->
 
