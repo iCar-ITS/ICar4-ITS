@@ -126,6 +126,9 @@ void cllbck_tim_100hz(const ros::TimerEvent &event)
 void cllbck_sub_stm32frompc_throttle_steering(const std_msgs::Int16MultiArrayConstPtr &msg)
 {
     data_from_pc.gas_v = (int32_t) msg->data[0];
+    if(data_from_pc.gas_v < 0){
+        data_from_pc.breake = (int32_t) msg->data[0];
+    }
     data_from_pc.steer_sp = (int32_t) msg->data[1];
 }
 
@@ -171,6 +174,10 @@ int interface_stm32_routine(){
     /* Sending and receiving data from the STM32. */
     int len_data_from_pc = sendto(socket_fd, (const char *)&data_from_pc, sizeof(data_from_pc), MSG_DONTWAIT, (struct sockaddr *)&socket_server_address, sizeof(socket_server_address));
     int len_data_to_pc = recvfrom(socket_fd, (char *)&data_to_pc, sizeof(data_to_pc), MSG_DONTWAIT, NULL, NULL);
+
+    _log.info("Len data from PC : %d",len_data_from_pc);
+    _log.info("Len data to   PC : %d",len_data_to_pc);
+
 
     data_from_pc.timestamp++;
 

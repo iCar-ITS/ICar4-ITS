@@ -2,16 +2,16 @@
     <include file="$(find icar_routine)/launch/common.launch" />
 
     <!--  -->
-    <!-- Velodyne 1 Configuration (Replaces Lidar Leshen C16) -->
+       <!-- Velodyne 1 Configuration (Replaces Lidar Leshen C16) -->
     <group ns="velodyne1">
         <arg name="calibration" default="$(find velodyne_pointcloud)/params/VLP16db.yaml"/>
-        <arg name="device_ip" default="192.168.20.13" />
+        <arg name="device_ip" default="192.168.1.201" />
         <arg name="frame_id" default="lidar_front_link" />
         <arg name="manager" default="velodyne1_nodelet_manager" />
         <arg name="max_range" default="30.0" />
         <arg name="min_range" default="0.05" />
         <arg name="port" default="2368" />
-        
+ 
         <!-- Nodelet Manager and Driver for Velodyne 1 -->
         <include file="$(find velodyne_driver)/launch/nodelet_manager.launch">
             <arg name="device_ip" value="$(arg device_ip)"/>
@@ -20,7 +20,7 @@
             <arg name="model" value="VLP16"/>
             <arg name="port" value="$(arg port)"/>
         </include>
-
+ 
         <!-- Transform Nodelet for Velodyne 1 -->
         <include file="$(find velodyne_pointcloud)/launch/transform_nodelet.launch">
             <arg name="model" value="VLP16"/>
@@ -30,17 +30,16 @@
             <arg name="min_range" value="$(arg min_range)"/>
         </include>
     </group>
-
-    <!-- Velodyne 2 Configuration (Replaces Lidar Leshen N301) -->
+        <!-- Velodyne 2 Configuration (Replaces Lidar Leshen N301) -->
     <group ns="velodyne2">
         <arg name="calibration" default="$(find velodyne_pointcloud)/params/VLP16db.yaml"/>
-        <arg name="device_ip" default="192.168.20.14" />
+        <arg name="device_ip" default="192.168.1.202" />
         <arg name="frame_id" default="lidar_rearright_link" />
         <arg name="manager" default="velodyne2_nodelet_manager" />
         <arg name="max_range" default="30.0" />
         <arg name="min_range" default="0.05" />
-        <arg name="port" default="4442" />
-        
+        <arg name="port" default="4122" />
+ 
         <!-- Nodelet Manager and Driver for Velodyne 2 -->
         <include file="$(find velodyne_driver)/launch/nodelet_manager.launch">
             <arg name="device_ip" value="$(arg device_ip)"/>
@@ -49,7 +48,7 @@
             <arg name="model" value="VLP16"/>
             <arg name="port" value="$(arg port)"/>
         </include>
-
+ 
         <!-- Transform Nodelet for Velodyne 2 -->
         <include file="$(find velodyne_pointcloud)/launch/transform_nodelet.launch">
             <arg name="model" value="VLP16"/>
@@ -59,6 +58,7 @@
             <arg name="min_range" value="$(arg min_range)"/>
         </include>
     </group>
+ 
 
 
     <!--  -->
@@ -79,7 +79,7 @@
 
     <!--  -->
 
-    <node pkg="icar_interface" type="interface_stm32" name="interface_stm32" output="screen" />
+    <node pkg="icar_interface" type="interface_stm32" name="interface_stm32" output="screen"  respawn="true"/>
     <node pkg="icar_interface" type="interface_gps" name="interface_gps" output="screen" />
     <node pkg="icar_interface" type="interface_web.py" name="interface_web" output="screen" />
 
