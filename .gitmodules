@@ -1,0 +1,6 @@
+[submodule "src/xtras/ps_ros_lib"]
+	path = src/xtras/ps_ros_lib
+	url = git@github.com:protanjung/ps_ros_lib.git
+[submodule "src/xtras/velodyne"]
+	path = src/xtras/velodyne
+	url = git@github.com:ros-drivers/velodyne.git
