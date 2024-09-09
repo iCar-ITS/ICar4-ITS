@@ -1,0 +1,43 @@
+<launch>
+    <arg name="data_path" default="$(env HOME)/icar-data" />
+
+    <!--  -->
+
+    <arg name="log_path" value="$(arg data_path)/log" />
+    <arg name="route_path" value="$(arg data_path)/route" />
+    <arg name="bag_path" value="$(arg data_path)/bag" />
+    <arg name="rviz_path" value="$(arg data_path)/rviz" />
+    <arg name="param_path" value="$(arg data_path)/param" />
+    <param name="log_path" value="$(arg log_path)" />
+    <param name="route_path" value="$(arg route_path)" />
+    <param name="bag_path" value="$(arg bag_path)" />
+    <param name="rviz_path" value="$(arg rviz_path)" />
+    <param name="param_path" value="$(arg param_path)" />
+
+    <!--  -->
+
+    <rosparam file="$(arg param_path)/icar.yaml" command="load" />
+
+    <include file="$(find ps_ros_lib)/launch/ps_ros_lib.launch">
+        <arg name="log_path" value="$(arg log_path)" />
+    </include>
+
+    <node pkg="rviz" type="rviz" name="rviz" output="log"
+        args="-d $(arg rviz_path)/icar.rviz" />
+
+    <!--  -->
+
+    <node pkg="icar_interface" type="interface_lidar" name="interface_lidar" output="screen" respawn="true" />
+
+    <node pkg="icar_middleware" type="transform_broadcaster" name="transform_broadcaster" output="screen" respawn="true" />
+    <node pkg="icar_middleware" type="odometry" name="odometry" output="screen" respawn="true" />
+    <node pkg="icar_middleware" type="pose_estimator" name="pose_estimator" output="screen" respawn="true" />
+    <node pkg="icar_middleware" type="minimap" name="minimap" output="screen" respawn="true" />
+    <node pkg="icar_middleware" type="obstacle" name="obstacle" output="screen" respawn="true" />
+    <node pkg="icar_middleware" type="segmentation" name="segmentation" output="screen" respawn="true" />
+
+    <node pkg="icar_ui" type="ui_process" name="ui_process" output="screen" respawn="true" />
+    <node pkg="icar_ui" type="ui_render.py" name="ui_render" output="screen" required="true" />
+
+    <node pkg="icar_routine" type="routine" name="routine" output="screen" respawn="true" />
+</launch>

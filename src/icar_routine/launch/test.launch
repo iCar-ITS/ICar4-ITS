@@ -1,0 +1,11 @@
+<launch>
+    <include file="$(find icar_routine)/launch/common.launch" />
+
+    <!--  -->
+
+    <param name="use_sim_time" value="true" />
+
+    <node pkg="rosbag" type="play" name="rosbag_play" output="log" required="true"
+        args="-l --clock --hz=200 $(env HOME)/icar-data/bag/2023-04-03-22-44-17.bag" />
+
+</launch>

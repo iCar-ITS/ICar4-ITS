@@ -1,0 +1,64 @@
+<launch>
+    <include file="$(find icar_routine)/launch/common.launch" />
+
+    <!--  -->
+
+    <node pkg="lslidar_c16_driver" type="lslidar_c16_driver_node" name="lslidar_c16_driver_node" output="log" respawn="true">
+        <param name="device_ip" value="192.168.50.3" />
+        <param name="msop_port" value="2368" />
+        <param name="difop_port" value="2369" />
+        <param name="frame_id" value="lidar_front_link" />
+    </node>
+
+    <node pkg="lslidar_c16_decoder" type="lslidar_c16_decoder_node" name="lslidar_c16_decoder_node" output="log" respawn="true">
+        <param name="min_range" value="0.05" />
+        <param name="max_range" value="30.0" />
+        <param name="frequency" value="10.0" />
+        <param name="publish_scan" value="true" />
+        <param name="scan_frame_id" value="lidar_front_link" />
+        <remap from="lslidar_pointcloud_c16" to="/lidar/front/points" />
+        <remap from="scan_topic" to="/lidar/front/scan" />
+    </node>
+
+    <!--  -->
+
+    <node pkg="lslidar_n301_driver" type="lslidar_n301_driver_node" name="lslidar_n301_driver_node" output="log" respawn="true">
+        <param name="device_ip" value="192.168.50.4" />
+        <param name="msop_port" value="2370" />
+        <param name="difop_port" value="2371" />
+        <param name="frame_id" value="lidar_rearright_link" />
+    </node>
+
+    <node pkg="lslidar_n301_decoder" type="lslidar_n301_decoder_node" name="lslidar_n301_decoder_node" output="log" respawn="true">
+        <param name="min_range" value="0.05" />
+        <param name="max_range" value="30.0" />
+        <param name="frequency" value="10.0" />
+        <param name="publish_point_cloud" value="true" />
+        <param name="child_frame_id" value="lidar_rearright_link" />
+        <remap from="lslidar_point_cloud" to="lidar/rearright/points" />
+        <remap from="scan" to="lidar/rearright/scan" />
+    </node>
+
+    <!--  -->
+
+    <!-- <node name="ntrip_client_node" pkg="ntrip_client" type="ntrip_ros.py" output="log" respawn="true">
+        <param name="host" value="nrtk.big.go.id" />
+        <param name="port" value="2001" />
+        <param name="mountpoint" value="Nearest-rtcm3" />
+        <param name="ntrip_version" value="" />
+        <param name="authenticate" value="true" />
+        <param name="username" value="pandustantra" />
+        <param name="password" value="pandustantra" />
+        <param name="ssl" value="false" />
+        <param name="rtcm_frame_id" value="gps_link" />
+        <remap from="nmea" to="ntrip_client/nmea" />
+        <remap from="rtcm" to="ntrip_client/rtcm" />
+    </node> -->
+
+    <!--  -->
+
+    <node pkg="icar_interface" type="interface_stm32" name="interface_stm32" output="screen" />
+    <node pkg="icar_interface" type="interface_gps" name="interface_gps" output="screen" />
+    <node pkg="icar_interface" type="interface_web.py" name="interface_web" output="screen" />
+
+</launch>

@@ -1,0 +1,6 @@
+float32 output_emergency
+float32 output_steering_to_right
+float32 output_steering_to_left
+float32 output_velocity_to_right
+float32 output_velocity_to_left
+float32 output_velocity_following
