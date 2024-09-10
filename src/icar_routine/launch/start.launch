@@ -1,5 +1,6 @@
 <launch>
     <include file="$(find icar_routine)/launch/common.launch" />
+    <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch" />
 
     <!--  -->
        <!-- Velodyne 1 Configuration (Replaces Lidar Leshen C16) -->

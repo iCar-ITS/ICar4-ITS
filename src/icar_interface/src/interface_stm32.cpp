@@ -112,8 +112,12 @@ int main(int argc, char **argv)
 
 void cllbck_tim_50hz(const ros::TimerEvent &event)
 {
+    ros::Time start = ros::Time::now();
+    
     if (interface_stm32_routine() == -1)
         ros::shutdown();
+
+    ros::Duration elapsed = ros::Time::now() - start;
 }
 
 void cllbck_tim_100hz(const ros::TimerEvent &event)
@@ -175,43 +179,40 @@ int interface_stm32_routine(){
     int len_data_from_pc = sendto(socket_fd, (const char *)&data_from_pc, sizeof(data_from_pc), MSG_DONTWAIT, (struct sockaddr *)&socket_server_address, sizeof(socket_server_address));
     int len_data_to_pc = recvfrom(socket_fd, (char *)&data_to_pc, sizeof(data_to_pc), MSG_DONTWAIT, NULL, NULL);
 
-    _log.info("Len data from PC : %d",len_data_from_pc);
-    _log.info("Len data to   PC : %d",len_data_to_pc);
-
 
     data_from_pc.timestamp++;
 
     //==================================
 
-    static uint32_t last_epoch_to_pc = 0;
+    // static uint32_t last_epoch_to_pc = 0;
 
-    /* This is to prevent the epoch from being checked when the epoch is 0.
-    This is because the epoch is 0 when the program is started. */
-    if (last_epoch_to_pc == 0)
-    {
-        // _log.warn("last epoch is 0. Initializing the last epoch to: %d. (%s, %d)", epoch_to_pc, __FILE__, __LINE__);
-        last_epoch_to_pc = data_to_pc.timestamp;
-        return 0;
-    }
+    // /* This is to prevent the epoch from being checked when the epoch is 0.
+    // This is because the epoch is 0 when the program is started. */
+    // if (last_epoch_to_pc == 0)
+  //     // _log.warn("last epoch is 0. Initializing the last epoch to: %d. (%s, %d)", epoch_to_pc, __FILE__, __LINE__);
+        // {
+  //     last_epoch_to_pc = data_to_pc.timestamp;
+    //     return 0;
+    // }
 
-    /* This is to check if the epoch is continuous.
-    If the epoch is not continuous, it means that the STM32 is not receiving the data from the PC. */
-    if (data_to_pc.timestamp != last_epoch_to_pc + 1)
-    {
-        // _log.error("Epoch is not continuous. Expected: %d. Received: %d. (%s, %d)", last_epoch_to_pc + 1, epoch_to_pc, __FILE__, __LINE__);
-        last_epoch_to_pc = 0;
-        return 0;
-    }
+    // /* This is to check if the epoch is continuous.
+    // If the epoch is not continuous, it means that the STM32 is not receiving the data from the PC. */
+    // if (data_to_pc.timestamp != last_epoch_to_pc + 1)
+    // {
+    //     // _log.error("Epoch is not continuous. Expected: %d. Received: %d. (%s, %d)", last_epoch_to_pc + 1, epoch_to_pc, __FILE__, __LINE__);
+    //     last_epoch_to_pc = 0;
+    //     return 0;
+    // }
 
-    /* This is to check if the data from the STM32 is received.
-    If the data is not received, it means that the STM32 is not sending the data to the PC. */
-    if (len_data_to_pc < 0)
-    {
-        _log.error("Data from STM32 not received. Returned: %d. (%s, %d)", len_data_to_pc, __FILE__, __LINE__);
-        return 0;
-    }
+    // /* This is to check if the data from the STM32 is received.
+    // If the data is not received, it means that the STM32 is not sending the data to the PC. */
+    // if (len_data_to_pc < 0)
+    // {
+    //     _log.error("Data from STM32 not received. Returned: %d. (%s, %d)", len_data_to_pc, __FILE__, __LINE__);
+    //     return 0;
+    // }
 
-    last_epoch_to_pc = data_to_pc.timestamp;
+    // last_epoch_to_pc = data_to_pc.timestamp;
 
     //==================================
 
